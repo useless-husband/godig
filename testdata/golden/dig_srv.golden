@@ -1,0 +1,18 @@
+; <<>> godig <<>> _sip._tcp.example.test. SRV
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 258
+;; flags: qr aa rd; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 1
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 1232
+
+;; QUESTION SECTION:
+;_sip._tcp.example.test.	IN	SRV
+
+;; ANSWER SECTION:
+_sip._tcp.example.test.	300	IN	SRV	1 5 5060 sip.example.test.
+
+;; Query time: 3 msec
+;; SERVER: 127.0.0.1#PORT(127.0.0.1) (UDP)
+;; WHEN: Tue Sep 29 12:00:00 UTC 2026
+;; MSG SIZE  rcvd: 87

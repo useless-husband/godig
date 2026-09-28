@@ -1,0 +1,18 @@
+; <<>> godig <<>> example.test. TYPE65
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 258
+;; flags: qr aa rd; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 1
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 1232
+
+;; QUESTION SECTION:
+;example.test.		IN	TYPE65
+
+;; ANSWER SECTION:
+example.test.		300	IN	TYPE65	\# 3 0001ab
+
+;; Query time: 3 msec
+;; SERVER: 127.0.0.1#PORT(127.0.0.1) (UDP)
+;; WHEN: Tue Sep 29 12:00:00 UTC 2026
+;; MSG SIZE  rcvd: 56

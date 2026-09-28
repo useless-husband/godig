@@ -1,0 +1,42 @@
+; <<>> godig <<>> +trace far.example.test. A
+;; starting from the built-in root hints (1 servers, IPv4), 0x20 case randomization on
+
+;; [1] ask a.root-servers.net. (192.0.2.1#53), zone ".": far.example.test. A
+;;     referral to test. (1 nameservers)
+test.			172800	IN	NS	a.nic.test.
+;;     glue: a.nic.test. = 192.0.2.2
+;;     received 81 bytes in 3 ms (UDP)
+;; [2] ask a.nic.test. (192.0.2.2#53), zone "test.": far.example.test. A
+;;     referral to example.test. (1 nameservers)
+example.test.		172800	IN	NS	ns1.example.test.
+;;     glue: ns1.example.test. = 192.0.2.3
+;;     received 79 bytes in 3 ms (UDP)
+;; [3] ask ns1.example.test. (192.0.2.3#53), zone "example.test.": far.example.test. A
+far.example.test.	120	IN	CNAME	www.nogl.test.
+;;     answer ends in a CNAME; continuing with www.nogl.test. from the root
+;;     received 68 bytes in 3 ms (UDP)
+;; [4] ask a.root-servers.net. (192.0.2.1#53), zone ".": www.nogl.test. A
+;;     referral to test. (1 nameservers)
+test.			172800	IN	NS	a.nic.test.
+;;     glue: a.nic.test. = 192.0.2.2
+;;     received 78 bytes in 3 ms (UDP)
+;; [5] ask a.nic.test. (192.0.2.2#53), zone "test.": www.nogl.test. A
+;;     referral to nogl.test. (1 nameservers)
+nogl.test.		172800	IN	NS	ns.provider.test.
+;;     glue: ns.provider.test. has none
+;;     received 68 bytes in 3 ms (UDP)
+;; no glue for ns.provider.test., so its address is looked up first:
+    ;; [6] ask a.root-servers.net. (192.0.2.1#53), zone ".": ns.provider.test. A
+    ;;     referral to test. (1 nameservers)
+    test.			172800	IN	NS	a.nic.test.
+    ;;     glue: a.nic.test. = 192.0.2.2
+    ;;     received 81 bytes in 3 ms (UDP)
+    ;; [7] ask a.nic.test. (192.0.2.2#53), zone "test.": ns.provider.test. A
+    ns.provider.test.	60	IN	A	192.0.2.4
+    ;;     received 61 bytes in 3 ms (UDP)
+;; ns.provider.test. is now known; continuing with the original question
+;; [8] ask ns.provider.test. (192.0.2.4#53), zone "nogl.test.": www.nogl.test. A
+www.nogl.test.		60	IN	A	192.0.2.20
+;;     received 58 bytes in 3 ms (UDP)
+
+;; done: NOERROR, 2 answer records, 8 queries sent

@@ -1,0 +1,19 @@
+; <<>> godig <<>> +trace nothing.example.test. A
+;; starting from the built-in root hints (1 servers, IPv4), 0x20 case randomization on
+
+;; [1] ask a.root-servers.net. (192.0.2.1#53), zone ".": nothing.example.test. A
+;;     referral to test. (1 nameservers)
+test.			172800	IN	NS	a.nic.test.
+;;     glue: a.nic.test. = 192.0.2.2
+;;     received 85 bytes in 3 ms (UDP)
+;; [2] ask a.nic.test. (192.0.2.2#53), zone "test.": nothing.example.test. A
+;;     referral to example.test. (1 nameservers)
+example.test.		172800	IN	NS	ns1.example.test.
+;;     glue: ns1.example.test. = 192.0.2.3
+;;     received 83 bytes in 3 ms (UDP)
+;; [3] ask ns1.example.test. (192.0.2.3#53), zone "example.test.": nothing.example.test. A
+;;     status: NXDOMAIN (the name does not exist)
+example.test.		300	IN	SOA	ns.example.test. hostmaster.example.test. 1 3600 600 86400 300
+;;     received 99 bytes in 3 ms (UDP)
+
+;; done: NXDOMAIN, 0 answer records, 3 queries sent

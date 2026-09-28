@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"strings"
 	"time"
 
 	"github.com/useless-husband/godig/internal/dnsmsg"
@@ -113,6 +114,24 @@ func Randomize0x20(name string, r io.Reader) string {
 	return string(out)
 }
 
+// restoreCase undoes 0x20 randomization for display: every trailing run of
+// labels in name that carries the random casing of sent is replaced by the
+// casing the caller originally asked for (orig).
+func restoreCase(name, sent, orig string) string {
+	nl, sl, ol := strings.Split(name, "."), strings.Split(sent, "."), strings.Split(orig, ".")
+	if len(sl) != len(ol) {
+		return name
+	}
+	k := 0
+	for k < len(nl) && k < len(sl) && nl[len(nl)-1-k] == sl[len(sl)-1-k] {
+		k++
+	}
+	for j := 0; j < k; j++ {
+		nl[len(nl)-1-j] = ol[len(ol)-1-j]
+	}
+	return strings.Join(nl, ".")
+}
+
 func isLetter(c byte) bool { return c|0x20 >= 'a' && c|0x20 <= 'z' }
 
 func (c *Client) buildQuery(name string, t dnsmsg.Type, rd, use0x20 bool) (*dnsmsg.Message, []byte, error) {
@@ -190,6 +209,7 @@ func (c *Client) exchangeUDP(ctx context.Context, server, name string, t dnsmsg.
 	if err != nil {
 		return nil, err
 	}
+	orig := dnsmsg.FQDN(name)
 	var d net.Dialer
 	conn, err := d.DialContext(ctx, "udp", server)
 	if err != nil {
@@ -237,6 +257,9 @@ func (c *Client) exchangeUDP(ctx context.Context, server, name string, t dnsmsg.
 		if !ok {
 			continue // unrelated or forged packet: keep waiting
 		}
+		if use0x20 {
+			msg.MapNames(func(s string) string { return restoreCase(s, q.Questions[0].Name, orig) })
+		}
 		return &Response{Msg: msg, Size: n, RTT: c.now().Sub(start), Server: server, Network: "udp"}, nil
 	}
 }
@@ -281,6 +304,9 @@ func (c *Client) exchangeTCP(ctx context.Context, server, name string, t dnsmsg.
 			return nil, ErrCase0x20
 		}
 		return nil, ErrMismatch
+	}
+	if c.Use0x20 {
+		msg.MapNames(func(s string) string { return restoreCase(s, q.Questions[0].Name, dnsmsg.FQDN(name)) })
 	}
 	return &Response{Msg: msg, Size: len(raw), RTT: c.now().Sub(start), Server: server, Network: "tcp"}, nil
 }

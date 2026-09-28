@@ -1,0 +1,44 @@
+{
+  "id": 258,
+  "opcode": "QUERY",
+  "status": "NOERROR",
+  "flags": [
+    "qr",
+    "aa",
+    "rd"
+  ],
+  "question": [
+    {
+      "name": "example.test.",
+      "type": "MX",
+      "class": "IN"
+    }
+  ],
+  "answer": [
+    {
+      "name": "example.test.",
+      "type": "MX",
+      "class": "IN",
+      "ttl": 3600,
+      "data": "10 mail.example.test."
+    },
+    {
+      "name": "example.test.",
+      "type": "MX",
+      "class": "IN",
+      "ttl": 3600,
+      "data": "20 mail2.example.test."
+    }
+  ],
+  "authority": [],
+  "additional": [],
+  "edns": {
+    "version": 0,
+    "udp_size": 1232,
+    "do": false
+  },
+  "server": "127.0.0.1:PORT",
+  "protocol": "udp",
+  "query_time_ms": 3,
+  "msg_size": 84
+}

@@ -343,3 +343,34 @@ func UnpackTruncated(msg []byte) (*Message, error) {
 	}
 	return m, nil
 }
+
+// MapNames applies f to every domain name in the message: question names,
+// record owners and the names inside CNAME, NS, PTR, MX, SOA and SRV data.
+// The message is modified in place.
+func (m *Message) MapNames(f func(string) string) {
+	for i := range m.Questions {
+		m.Questions[i].Name = f(m.Questions[i].Name)
+	}
+	for _, sec := range []([]RR){m.Answers, m.Authorities, m.Additionals} {
+		for i := range sec {
+			sec[i].Name = f(sec[i].Name)
+			switch d := sec[i].Data.(type) {
+			case CNAME:
+				sec[i].Data = CNAME{f(d.Target)}
+			case NS:
+				sec[i].Data = NS{f(d.Host)}
+			case PTR:
+				sec[i].Data = PTR{f(d.Host)}
+			case MX:
+				d.Host = f(d.Host)
+				sec[i].Data = d
+			case SOA:
+				d.MName, d.RName = f(d.MName), f(d.RName)
+				sec[i].Data = d
+			case SRV:
+				d.Target = f(d.Target)
+				sec[i].Data = d
+			}
+		}
+	}
+}

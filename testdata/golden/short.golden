@@ -1,0 +1,15 @@
+$ godig +short example.test A
+192.0.2.10
+192.0.2.11
+$ godig +short example.test AAAA
+2001:db8::10
+$ godig +short example.test MX
+10 mail.example.test.
+20 mail2.example.test.
+$ godig +short example.test TXT
+"v=spf1 -all" "second \"quoted\" part"
+$ godig +short example.test CAA
+0 issue "ca.example.net"
+$ godig +short example.test TYPE65
+\# 3 0001ab
+$ godig +short example.test SOA

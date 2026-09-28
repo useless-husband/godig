@@ -511,3 +511,26 @@ func TestAllSectionsRoundTrip(t *testing.T) {
 		t.Fatalf("%v\n%+v\n%+v", err, got, m)
 	}
 }
+
+func TestMapNamesCoversAllNameFields(t *testing.T) {
+	m := &Message{
+		Questions: []Question{{"A.Example.", TypeA, ClassIN}},
+		Answers: []RR{
+			{Name: "A.Example.", Class: ClassIN, Data: CNAME{"B.Example."}},
+			{Name: "A.Example.", Class: ClassIN, Data: MX{1, "M.Example."}},
+			{Name: "A.Example.", Class: ClassIN, Data: SOA{MName: "N.Example.", RName: "R.Example."}},
+			{Name: "A.Example.", Class: ClassIN, Data: SRV{Target: "S.Example."}},
+			{Name: "A.Example.", Class: ClassIN, Data: NS{"NS.Example."}},
+			{Name: "A.Example.", Class: ClassIN, Data: PTR{"P.Example."}},
+		},
+	}
+	m.MapNames(strings.ToLower)
+	for _, rr := range m.Answers {
+		if rr.Name != "a.example." || strings.ToLower(rr.Data.String()) != rr.Data.String() {
+			t.Errorf("not mapped: %v", rr)
+		}
+	}
+	if m.Questions[0].Name != "a.example." {
+		t.Fatal(m.Questions[0].Name)
+	}
+}

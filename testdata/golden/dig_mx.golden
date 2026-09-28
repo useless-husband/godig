@@ -1,0 +1,19 @@
+; <<>> godig <<>> example.test. MX
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 258
+;; flags: qr aa rd; QUERY: 1, ANSWER: 2, AUTHORITY: 0, ADDITIONAL: 1
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 1232
+
+;; QUESTION SECTION:
+;example.test.		IN	MX
+
+;; ANSWER SECTION:
+example.test.		3600	IN	MX	10 mail.example.test.
+example.test.		3600	IN	MX	20 mail2.example.test.
+
+;; Query time: 3 msec
+;; SERVER: 127.0.0.1#PORT(127.0.0.1) (UDP)
+;; WHEN: Tue Sep 29 12:00:00 UTC 2026
+;; MSG SIZE  rcvd: 84

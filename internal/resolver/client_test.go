@@ -222,8 +222,12 @@ func TestClient0x20SendsMixedCaseAndAcceptsEcho(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if seen.Load() != "EXAMPLE.TEST." || resp.Msg.Questions[0].Name != "EXAMPLE.TEST." {
-		t.Fatalf("sent %v, echoed %v", seen.Load(), resp.Msg.Questions[0].Name)
+	if seen.Load() != "EXAMPLE.TEST." {
+		t.Fatalf("query name on the wire: %v", seen.Load())
+	}
+	// The randomized casing is undone for display.
+	if resp.Msg.Questions[0].Name != "example.test." || resp.Msg.Answers[0].Name != "example.test." {
+		t.Fatalf("case not restored: %v / %v", resp.Msg.Questions[0].Name, resp.Msg.Answers[0].Name)
 	}
 }
 
@@ -292,5 +296,18 @@ func TestTCPFraming(t *testing.T) {
 	}
 	if WriteTCPMessage(&buf, make([]byte, 70000)) == nil {
 		t.Fatal("oversized message must fail")
+	}
+}
+
+func TestRestoreCase(t *testing.T) {
+	for _, c := range []struct{ name, sent, orig, want string }{
+		{"WwW.EXaMplE.CoM.", "WwW.EXaMplE.CoM.", "www.example.com.", "www.example.com."},
+		{"hera.ns.cloudflare.Com.", "wWw.exAMple.Com.", "www.example.com.", "hera.ns.cloudflare.com."},
+		{"other.net.", "wWw.exAMple.Com.", "www.example.com.", "other.net."},
+		{".", "Ab.", "ab.", "."},
+	} {
+		if got := restoreCase(c.name, c.sent, c.orig); got != c.want {
+			t.Errorf("restoreCase(%q) = %q, want %q", c.name, got, c.want)
+		}
 	}
 }

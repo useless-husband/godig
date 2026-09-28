@@ -32,6 +32,7 @@ const (
 	KindError    = "error" // timeout, SERVFAIL, lame server...
 	KindNSLookup = "ns-lookup"
 	KindNSLoop   = "ns-loop"
+	KindNSFound  = "ns-found" // the address lookup for a glueless nameserver finished
 )
 
 // NSInfo describes one nameserver of a delegation.
@@ -508,6 +509,8 @@ func (r *Resolver) resolveNSAddrs(ctx context.Context, st *state, d *delegation,
 		return nil, firstErr
 	}
 	d.NS[i].Addrs = addrs
+	r.emit(Event{Depth: depth, Kind: KindNSFound, Zone: d.Zone, Question: q, Target: host,
+		NS: []NSInfo{{Host: host, Addrs: addrs}}})
 	if r.Zones != nil {
 		r.Zones.Put(*d)
 	}
