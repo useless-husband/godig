@@ -306,3 +306,40 @@ func unpackRR(msg []byte, off int) (RR, int, error) {
 	}
 	return rr, start + rdlen, nil
 }
+
+// UnpackTruncated decodes as much of a possibly truncated message as it can.
+// The header and question section must be intact; resource records are
+// returned up to the first one that fails to decode. It is meant for replies
+// with the TC bit set, where only the fact of truncation matters.
+func UnpackTruncated(msg []byte) (*Message, error) {
+	if len(msg) < 12 {
+		return nil, ErrShort
+	}
+	m := &Message{Header: headerFromFlags(binary.BigEndian.Uint16(msg), binary.BigEndian.Uint16(msg[2:]))}
+	qd := int(binary.BigEndian.Uint16(msg[4:]))
+	off := 12
+	for i := 0; i < qd; i++ {
+		name, n, err := readName(msg, off)
+		if err != nil {
+			return nil, err
+		}
+		if n+4 > len(msg) {
+			return nil, ErrShort
+		}
+		m.Questions = append(m.Questions, Question{name, Type(binary.BigEndian.Uint16(msg[n:])), Class(binary.BigEndian.Uint16(msg[n+2:]))})
+		off = n + 4
+	}
+	sections := []*[]RR{&m.Answers, &m.Authorities, &m.Additionals}
+	for si, sec := range sections {
+		want := int(binary.BigEndian.Uint16(msg[6+2*si:]))
+		for i := 0; i < want; i++ {
+			rr, n, err := unpackRR(msg, off)
+			if err != nil {
+				return m, nil
+			}
+			*sec = append(*sec, rr)
+			off = n
+		}
+	}
+	return m, nil
+}
