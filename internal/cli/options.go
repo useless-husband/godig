@@ -43,6 +43,7 @@ type Options struct {
 func ParseArgs(args []string) (*Options, error) {
 	o := &Options{Port: 53, Retry: -1, Type: dnsmsg.TypeA}
 	typeSet := false
+	var positional []string
 	setType := func(s string) error {
 		t, ok := dnsmsg.ParseType(s)
 		if !ok {
@@ -114,11 +115,31 @@ func ParseArgs(args []string) (*Options, error) {
 		case strings.HasPrefix(a, "-") && len(a) > 1:
 			return nil, fmt.Errorf("unknown option %q", a)
 		default:
+			positional = append(positional, a)
+		}
+	}
+	// Positional words are the name and optionally a type (and class IN), in
+	// either order like dig: "example.com MX" and "MX example.com" both work.
+	nameAt := -1
+	for i, w := range positional {
+		if _, isType := dnsmsg.ParseType(w); !isType && !strings.EqualFold(w, "IN") && nameAt < 0 {
+			nameAt = i
+		}
+	}
+	if nameAt < 0 && len(positional) > 0 {
+		nameAt = 0 // every word looks like a type ("godig a"): the first is the name
+	}
+	for i, w := range positional {
+		switch {
+		case i == nameAt:
 			if o.Name == "" {
-				o.Name = a
-			} else if strings.EqualFold(a, "IN") {
-				// class IN is the only class we speak
-			} else if err := setType(a); err != nil {
+				o.Name = w
+			} else if err := setType(w); err != nil {
+				return nil, err
+			}
+		case strings.EqualFold(w, "IN"):
+		default:
+			if err := setType(w); err != nil {
 				return nil, err
 			}
 		}

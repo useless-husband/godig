@@ -81,7 +81,7 @@ func Run(ctx context.Context, args []string, env *Env) int {
 	}
 	opts, err := ParseArgs(args)
 	if err != nil {
-		fmt.Fprintf(env.Stderr, "godig: %v\n\n%s", err, usage)
+		fmt.Fprintf(env.Stderr, "godig: %v\nTry 'godig --help' for usage.\n", err)
 		return ExitUsage
 	}
 	if opts.Help || (opts.Name == "" && !opts.Version) {

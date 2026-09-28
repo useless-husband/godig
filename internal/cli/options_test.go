@@ -128,3 +128,20 @@ func TestPadAlignsToColumn24(t *testing.T) {
 		}
 	}
 }
+
+func TestParseArgsTypeBeforeName(t *testing.T) {
+	o, err := ParseArgs([]string{"mx", "example.com"})
+	if err != nil || o.Name != "example.com" || o.Type != dnsmsg.TypeMX {
+		t.Fatalf("%+v %v", o, err)
+	}
+	o, err = ParseArgs([]string{"a"}) // a lone word is always the name
+	if err != nil || o.Name != "a" || o.Type != dnsmsg.TypeA {
+		t.Fatalf("%+v %v", o, err)
+	}
+}
+
+func TestParseArgsUnknownSecondWordIsTypeError(t *testing.T) {
+	if _, err := ParseArgs([]string{"example.com", "example.org"}); err == nil {
+		t.Fatal("two names should be rejected")
+	}
+}
