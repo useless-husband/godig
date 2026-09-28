@@ -10,17 +10,25 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        include:
+          # go.mod 寫 1.22，在 Linux 上驗證最低版本；macOS 用最新版，
+          # 因為 Go 1.22 加 -race 在新版 macOS 會遇到 dyld「missing LC_UUID」而無法執行測試
+          - os: ubuntu-latest
+            go: "1.22"
+          - os: ubuntu-latest
+            go: stable
+          - os: macos-latest
+            go: stable
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
         with:
-          go-version: "1.22"
+          go-version: ${{ matrix.go }}
       - name: vet
         run: go vet ./...
       - name: test (race, seed corpus only)
         run: go test -race -count=1 ./...
       - name: cross-compile
-        if: matrix.os == 'ubuntu-latest'
+        if: matrix.os == 'ubuntu-latest' && matrix.go == 'stable'
         run: make release
